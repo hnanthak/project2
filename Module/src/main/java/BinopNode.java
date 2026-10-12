@@ -1,5 +1,7 @@
 public record BinopNode(String operator, AST left, AST right) implements AST{
+    @Override
     public double eval(){
+
         double lval= left.eval();
         double rval= right.eval();
 
