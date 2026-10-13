@@ -1,8 +1,9 @@
 public class parser {
     public static AST parsePostfix(String input) {
         if (input.trim().isEmpty()) {
-            throw new IllegalArgumentException("emptyinput");
+            throw new IllegalArgumentException("the input is empty");
         }
+
 
         String[] tokens = input.trim().split("\\s+");
         ArrayStack<AST> stack = ArrayStack.emptyStack();
@@ -18,19 +19,20 @@ public class parser {
                         token.equals("^")) {
                     if (stack.size() < 2) {
                         throw new IllegalArgumentException(
-                                "insufficient operands"
+                                "not sufficient operands"
                         );
                     }
                     AST right = stack.pop();
                     AST left = stack.pop();
                     stack.push(new BinopNode(token, left, right));
                 } else {
-                    throw new IllegalArgumentException("invalid token");
+                    throw new IllegalArgumentException("the tokens not valid");
                 }
             }
         }
         return stack.pop();
     }
+
 
     private static boolean isOperator(String token) {
         return token.equals("+") ||
@@ -39,6 +41,7 @@ public class parser {
                 token.equals("/") ||
                 token.equals("^");
     }
+
 
     private static int precedence(String operator) {
         return switch (operator) {
@@ -49,31 +52,39 @@ public class parser {
         };
     }
 
+
     public static AST parseInfix(String input) {
         if (input == null || input.trim().isEmpty()) {
-            throw new IllegalArgumentException("empty input");
+            throw new IllegalArgumentException("the inputs empty");
         }
+
 
         ArrayStack<AST> values = ArrayStack.emptyStack();
         ArrayStack<String> operators = ArrayStack.emptyStack();
+
 
         String[] tokens = input.trim().split("\\s+");
 
 
         boolean expectingValue = true;
 
+
         for (String token : tokens) {
             try {
                 double number = Double.parseDouble(token);
+
 
                 if (!expectingValue) {
                     throw new IllegalArgumentException("too many operands");
                 }
 
+
                 values.push(new NumNode(number));
                 expectingValue = false;
 
+
             } catch (NumberFormatException e) {
+
 
                 if (token.equals("(")) {
                     if (!expectingValue) {
@@ -83,37 +94,36 @@ public class parser {
                 }
                 else if (token.equals(")")) {
 
+
                     while (!operators.isEmpty() && !operators.peek().equals("(")) {
                         String operator = operators.pop();
                         if (values.size() < 2) {
-                            throw new IllegalArgumentException("insufficient operands");
+                            throw new IllegalArgumentException("not sufficient operands");
                         }
                         AST right = values.pop();
                         AST left = values.pop();
                         values.push(new BinopNode(operator, left, right));
                     }
 
+
                     if (operators.isEmpty()) {
-                        throw new IllegalArgumentException("mismatched close paren");
+                        throw new IllegalArgumentException("closed parantheses mismatched");
                     }
-
                     operators.pop();
-
-                    if (expectingValue) {throw new IllegalArgumentException("insufficient operands");
+                    if (expectingValue) {throw new IllegalArgumentException("not sufficient operands");
                     }
-
                     expectingValue = false;
-
                 }
                 else if (isOperator(token)) {
 
+
                     if (expectingValue) {
-                        throw new IllegalArgumentException("insufficient operands");
+                        throw new IllegalArgumentException("not sufficient operands");
                     }
                     while (!operators.isEmpty() && !operators.peek().equals("(") && (precedence(operators.peek()) > precedence(token) || (precedence(operators.peek()) == precedence(token) && !token.equals("^")))) {
                         String operator = operators.pop();
                         if (values.size() < 2) {
-                            throw new IllegalArgumentException("insufficient operands");
+                            throw new IllegalArgumentException("not sufficient operands");
                         }
                         AST right = values.pop();
                         AST left = values.pop();
@@ -123,31 +133,37 @@ public class parser {
                     expectingValue = true;
                 }
                 else {
-                    throw new IllegalArgumentException("invalid token");
+                    throw new IllegalArgumentException("token is not valid");
                 }
             }
         }
         while (!operators.isEmpty()) {
 
+
             String operator = operators.pop();
             if (operator.equals("(")) {
-                throw new IllegalArgumentException("mismatched open paren");
+                throw new IllegalArgumentException("open paranthesis doesn't match");
             }
+
 
             if (values.size() < 2) {
                 throw new IllegalArgumentException(
-                        "insufficient operands");
+                        "not sufficient operands");
             }
+
 
             AST right = values.pop();
             AST left = values.pop();
 
+
             values.push(new BinopNode(operator, left, right));
         }
 
+
         if (expectingValue) {
-            throw new IllegalArgumentException("insufficient operands");
+            throw new IllegalArgumentException("not sufficient operands");
         }
+
 
         if (values.size() > 1) {
             throw new IllegalArgumentException("too many operands");
